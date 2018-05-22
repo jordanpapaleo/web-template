@@ -1,75 +1,58 @@
-const { resolve } = require('path')
+const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CleanWebpackPlugin = require('clean-webpack-plugin')
 
 module.exports = {
-  entry: [
-    './src/index.js', 'webpack/hot/only-dev-server', 'webpack-dev-server/client?http://localhost:3001'
-  ],
+  entry: {
+    app: './src/index.js'
+  },
   output: {
     filename: '[name].bundle.js',
-    path: resolve(__dirname, 'bin'),
-    publicPath: '/'
+    path: path.resolve(__dirname, 'dist')
   },
-  devtool: 'source-map',
+  devtool: 'inline-source-map',
+  plugins: [
+    new CleanWebpackPlugin(['dist']),
+    new HtmlWebpackPlugin({
+      title: 'Development',
+      inject: true,
+      template: path.resolve('./public/index.html')
+    })
+  ],
   resolve: {
-    modules: [resolve('node_modules')],
+    modules: ['node_modules'],
     extensions: ['.js', '.json']
   },
   devServer: {
-    contentBase: resolve(__dirname, 'bin'),
-    publicPath: '/'
+    contentBase: './dist',
+    port: 8001
+  },
+  performance: {
+    hints: false,
   },
   module: {
-    noParse: /node_modules\/.bin/,
     rules: [
       {
-        test: /\.js$/,
-        use: ['babel-loader'],
-        exclude: /node_modules/
-      },
-      {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader?modules']
-      },
-      {
-        test: /\.less$/,
-        use: ['style-loader', 'css-loader?modules', 'less-loader']
-      },
-      {
-        test: /\.scss$/,
-        use: ['style-loader', 'css-loader?modules', 'sass-loader']
-      },
-      {
-        test: /\.(ico|jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2)(\?.*)?$/,
-        exclude: /\/favicon.ico$/,
         use: [
-          {
-            loader: 'file-loader',
-            options: {
-              name: 'static/media/[name].[hash:8].[ext]'
-            }
-          }
+          'style-loader',
+          'css-loader'
         ]
       },
       {
-        test: /\.(mp4|webm)(\?.*)?$/,
+        test: /\.(png|svg|jpg|gif)$/,
         use: [
-          {
-            loader: 'url-loader',
-            options: {
-              limit: 10000,
-              name: 'static/media/[name].[hash:8].[ext]'
-            }
-          }
+          'file-loader'
         ]
+      },
+      {
+        test: /\.(js|jsx)$/,
+        include: path.resolve('./src'),
+        loader: require.resolve('babel-loader'),
+        options: {
+          cacheDirectory: true,
+        },
       }
     ]
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-      inject: true,
-      filename: 'index.html',
-      template: resolve(__dirname, 'src/index.tmpl.html')
-    })
-  ]
+  }
 }
